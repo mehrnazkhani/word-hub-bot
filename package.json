@@ -1,0 +1,18 @@
+{
+  "name": "word-hub-bot",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy --minify",
+    "cf-typegen": "wrangler types --env-interface CloudflareBindings"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.117.2",
+    "grammy": "^1.46.0",
+    "hono": "^4.13.9"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.3",
+    "wrangler": "^4.110.0"
+  }
+}
