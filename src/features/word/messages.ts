@@ -10,16 +10,13 @@ export const wordMessages = {
     "🤔 I couldn't match that to a valid word. Check the spelling and try again.",
   expired: "⌛ This request expired. Please send the word again.",
   aiError: "🤖 I couldn't look that up right now. Please try again.",
-  spellingPrompt: (word: string) =>
-    `🔍 Did you mean one of these instead of “${word}”?`,
-  baseFormPrompt: (word: string, base: string, description: string) =>
-    `🧩 “${word}” looks like a ${description || "different form"} of “${base}”.\nWhich one do you want to look up?`,
-  spellingDone: (word: string) =>
-    `✅ Spelling confirmed: ${word}\n(next steps coming soon)`,
-  cancelled: "🛑 Cancelled. Send me a new word anytime.",
-  posPrompt: (word: string) =>
-    `🏷️ “${word}” has more than one meaning. Which one?`,
+
+  confirmed: (word: string) =>
+    `✅ Word confirmed: ${word}\n(next steps coming soon)`,
+
   useButtons: "👆 Please pick one of the options above, or tap Cancel.",
+  cancelled: "🛑 Cancelled. Send me a new word anytime.",
   cancelButton: "❌ Cancel",
+
   searching: (word: string) => `🔎 Looking up “${word}”…`,
 } as const;

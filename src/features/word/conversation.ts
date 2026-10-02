@@ -1,7 +1,8 @@
 import { InlineKeyboard } from "grammy";
-import { checkSpelling } from "../ai/spelling";
 import { wordMessages } from "./messages";
 import { cancelKeyboard, removeCancelKeyboard } from "./keyboards";
+import { runSpellingStep } from "./spelling";
+import { runBaseFormStep } from "./base-form";
 
 import type { Env } from "../../types";
 import type { BotConversation, ConversationContext } from "../../context";
@@ -23,56 +24,18 @@ export const createWordConversation = (env: Env) => {
       reply_markup: cancelKeyboard,
     });
 
-    await ctx.replyWithChatAction("typing");
+    const fail = () =>
+      ctx.reply(wordMessages.aiError, { reply_markup: removeCancelKeyboard });
 
-    const spelling = await conversation.external(async () => {
-      try {
-        return await checkSpelling(env, word);
-      } catch (err) {
-        console.error("[word] spelling failed:", err);
-        return null;
-      }
-    });
+    const base = { conversation, ctx, env };
 
-    if (!spelling) {
-      await ctx.reply(wordMessages.aiError, {
-        reply_markup: removeCancelKeyboard,
-      });
-      return;
-    }
+    const spelled = await runSpellingStep({ ...base, word });
+    if (!spelled) return fail();
 
-    if (spelling.isCorrect || spelling.suggestions.length === 0) {
-      await ctx.reply(wordMessages.spellingDone(word), {
-        reply_markup: removeCancelKeyboard,
-      });
-      return;
-    }
+    const finalWord = await runBaseFormStep({ ...base, word: spelled });
+    if (!finalWord) return fail();
 
-    const keyboard = new InlineKeyboard();
-    spelling.suggestions.forEach((s, i) => keyboard.text(s.word, `sp:${i}`));
-    keyboard.row().text(`Keep “${word}”`, "sp:keep");
-
-    const list = spelling.suggestions
-      .map((s, i) => `${i + 1}. ${s.word} — ${s.explanation}`)
-      .join("\n");
-
-    await ctx.reply(`${wordMessages.spellingPrompt(word)}\n\n${list}`, {
-      reply_markup: keyboard,
-    });
-
-    const choice = await conversation.waitFor("callback_query:data", {
-      otherwise: (c) => c.reply(wordMessages.useButtons),
-    });
-    await choice.answerCallbackQuery();
-
-    const data = choice.callbackQuery.data;
-    const picked =
-      data === "sp:keep"
-        ? word
-        : (spelling.suggestions[Number(data.replace("sp:", ""))]?.word ?? word);
-
-    await choice.editMessageText(`✅ ${picked}`);
-    await choice.reply(wordMessages.spellingDone(picked), {
+    await ctx.reply(wordMessages.confirmed(finalWord), {
       reply_markup: removeCancelKeyboard,
     });
   };
