@@ -3,6 +3,8 @@ import { wordMessages } from "./messages";
 import { cancelKeyboard, removeCancelKeyboard } from "./keyboards";
 import { runSpellingStep } from "./spelling";
 import { runBaseFormStep } from "./base-form";
+import { runPosStep } from "./POS";
+import { posMessages } from "./POS/message";
 
 import type { Env } from "../../types";
 import type { BotConversation, ConversationContext } from "../../context";
@@ -35,7 +37,18 @@ export const createWordConversation = (env: Env) => {
     const finalWord = await runBaseFormStep({ ...base, word: spelled });
     if (!finalWord) return fail();
 
-    await ctx.reply(wordMessages.confirmed(finalWord), {
+    const pos = await runPosStep({ ...base, word: finalWord });
+    if (!pos.ok) {
+      if (pos.reason === "none") {
+        await ctx.reply(posMessages.notAWord, {
+          reply_markup: removeCancelKeyboard,
+        });
+        return;
+      }
+      return fail();
+    }
+
+    await ctx.reply(wordMessages.confirmed(finalWord, pos.pos), {
       reply_markup: removeCancelKeyboard,
     });
   };

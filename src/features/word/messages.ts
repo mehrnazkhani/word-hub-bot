@@ -11,8 +11,8 @@ export const wordMessages = {
   expired: "⌛ This request expired. Please send the word again.",
   aiError: "🤖 I couldn't look that up right now. Please try again.",
 
-  confirmed: (word: string) =>
-    `✅ Word confirmed: ${word}\n(next steps coming soon)`,
+  confirmed: (word: string, pos: string) =>
+    `✅ Ready: ${word} (${pos})\n(details coming soon)`,
 
   useButtons: "👆 Please pick one of the options above, or tap Cancel.",
   cancelled: "🛑 Cancelled. Send me a new word anytime.",
