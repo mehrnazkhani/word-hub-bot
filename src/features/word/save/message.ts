@@ -1,0 +1,11 @@
+import { TELEGRAM_CATEGORY_NAME } from "../../../config";
+
+export const saveMessages = {
+  saveButton: "💾 Save",
+  success: `✅ Saved to ${TELEGRAM_CATEGORY_NAME}`,
+  limitReached:
+    "⚠️ You've reached your word limit. Delete some words in the app to add more.",
+  retry: "❌ Couldn't save this word. Tap Save to try again.",
+  failed: "❌ Couldn't save this word. Please try again later.",
+  next: "✨ Send me another word anytime.",
+} as const;

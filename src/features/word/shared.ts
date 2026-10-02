@@ -1,4 +1,9 @@
 export const WORD_LIMITS = {
+  word: 50,
+  translation: 200,
+  description: 500,
+  example: 200,
+  relatedWord: 50,
   maxRelatedWords: 3,
 } as const;
 

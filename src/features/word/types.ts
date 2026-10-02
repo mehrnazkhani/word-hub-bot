@@ -1,4 +1,5 @@
 import type { BotConversation, ConversationContext } from "../../context";
+import type { WordDetails } from "../ai/details";
 import type { Env } from "../../types";
 
 export type StepInput = {
@@ -15,3 +16,9 @@ export type PosResult =
   | { ok: false; reason: "error" | "none" };
 
 export type DetailsInput = StepInput & { pos: string };
+
+export type SaveStepInput = DetailsInput & {
+  userId: string;
+  details: WordDetails;
+  cardHtml: string;
+};

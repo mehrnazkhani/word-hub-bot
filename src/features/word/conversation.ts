@@ -1,10 +1,10 @@
-import { InlineKeyboard } from "grammy";
 import { wordMessages } from "./messages";
 import { cancelKeyboard, removeCancelKeyboard } from "./keyboards";
 import { runSpellingStep } from "./spelling";
 import { runBaseFormStep } from "./base-form";
 import { runPosStep } from "./POS";
 import { runDetailsStep } from "./details";
+import { runSaveStep } from "./save";
 import { displayWordCard } from "./details/display";
 import { posMessages } from "./POS/message";
 
@@ -16,7 +16,9 @@ export const createWordConversation = (env: Env) => {
     conversation: BotConversation,
     ctx: ConversationContext,
     word: string,
+    userId: string,
   ) {
+    // Global cancel: stays active at every wait call below.
     conversation.waitForHears(wordMessages.cancelButton).then(async (c) => {
       await c.reply(wordMessages.cancelled, {
         reply_markup: removeCancelKeyboard,
@@ -55,9 +57,18 @@ export const createWordConversation = (env: Env) => {
       word: finalWord,
       pos: pos.pos,
     });
-    await ctx.reply(displayWordCard(finalWord, details), {
-      parse_mode: "HTML",
-      reply_markup: removeCancelKeyboard,
+    if (!details) return fail();
+
+    // The user's chosen part of speech wins over what the AI returned
+    const finalDetails = { ...details, partOfSpeech: pos.pos };
+
+    await runSaveStep({
+      ...base,
+      word: finalWord,
+      pos: pos.pos,
+      userId,
+      details: finalDetails,
+      cardHtml: displayWordCard(finalWord, finalDetails),
     });
   };
 };

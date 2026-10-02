@@ -31,7 +31,7 @@ export function createBot(env: Env) {
   bot.use(createConversation(createWordConversation(env), "word"));
 
   bot.command("start", createStartHandler(env));
-  bot.on("message:text", createWordHandler()); // must stay last
+  bot.on("message:text", createWordHandler(env));
 
   return bot;
 }
