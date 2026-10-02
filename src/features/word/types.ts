@@ -1,10 +1,6 @@
 import type { BotConversation, ConversationContext } from "../../context";
 import type { Env } from "../../types";
 
-export type PosResult =
-  | { ok: true; pos: string }
-  | { ok: false; reason: "error" | "none" };
-
 export type StepInput = {
   conversation: BotConversation;
   ctx: ConversationContext;
@@ -13,3 +9,9 @@ export type StepInput = {
 };
 
 export type StepResult = Promise<string | null>;
+
+export type PosResult =
+  | { ok: true; pos: string }
+  | { ok: false; reason: "error" | "none" };
+
+export type DetailsInput = StepInput & { pos: string };

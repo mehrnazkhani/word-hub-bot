@@ -4,6 +4,8 @@ import { cancelKeyboard, removeCancelKeyboard } from "./keyboards";
 import { runSpellingStep } from "./spelling";
 import { runBaseFormStep } from "./base-form";
 import { runPosStep } from "./POS";
+import { runDetailsStep } from "./details";
+import { displayWordCard } from "./details/display";
 import { posMessages } from "./POS/message";
 
 import type { Env } from "../../types";
@@ -48,7 +50,13 @@ export const createWordConversation = (env: Env) => {
       return fail();
     }
 
-    await ctx.reply(wordMessages.confirmed(finalWord, pos.pos), {
+    const details = await runDetailsStep({
+      ...base,
+      word: finalWord,
+      pos: pos.pos,
+    });
+    await ctx.reply(displayWordCard(finalWord, details), {
+      parse_mode: "HTML",
       reply_markup: removeCancelKeyboard,
     });
   };
