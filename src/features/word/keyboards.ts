@@ -1,4 +1,5 @@
 import { Keyboard } from "grammy";
+import type { ConversationContext } from "../../context";
 import { wordMessages } from "./messages";
 
 export const cancelKeyboard = new Keyboard()
@@ -6,3 +7,10 @@ export const cancelKeyboard = new Keyboard()
   .resized();
 
 export const removeCancelKeyboard = { remove_keyboard: true as const };
+
+export const clearCancelReplayKeyboard = async (ctx: ConversationContext) => {
+  const sent = await ctx.reply("✅", {
+    reply_markup: removeCancelKeyboard,
+  });
+  await ctx.api.deleteMessage(sent.chat.id, sent.message_id);
+};

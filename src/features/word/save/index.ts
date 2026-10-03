@@ -1,5 +1,5 @@
 import { InlineKeyboard } from "grammy";
-import { removeCancelKeyboard } from "../keyboards";
+import { clearCancelReplayKeyboard } from "../keyboards";
 import { wordMessages } from "../messages";
 import { saveMessages } from "./message";
 import { saveWord } from "./service";
@@ -37,12 +37,9 @@ export const runSaveStep = async ({
       // Popup instead of editing the message: the button stays for a retry
       await click.answerCallbackQuery({
         text: saveMessages.retry,
-        show_alert: true,
       });
       continue;
     }
-
-    await click.answerCallbackQuery();
 
     const text = {
       success: saveMessages.success,
@@ -51,14 +48,13 @@ export const runSaveStep = async ({
       error: saveMessages.failed,
     }[result.status];
 
-    // No reply_markup here, so the Save button is removed
     await click.editMessageText(`${cardHtml}\n\n${text}`, {
       parse_mode: "HTML",
     });
+
+    await click.answerCallbackQuery({ text });
     break;
   }
 
-  // A message can only carry one reply_markup, so removing the Cancel
-  // keyboard needs its own message.
-  await ctx.reply(saveMessages.next, { reply_markup: removeCancelKeyboard });
+  await clearCancelReplayKeyboard;
 };
