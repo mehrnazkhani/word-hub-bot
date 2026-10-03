@@ -6,6 +6,7 @@ import type { WordDetails } from "../../ai/details";
 
 export type SaveResult =
   | { status: "success" }
+  | { status: "duplicate" }
   | { status: "limit_reached" }
   | { status: "error" };
 
@@ -39,6 +40,7 @@ const getTelegramCategoryId = async (
   if (error) throw error;
   if (data) return data.id;
 
+  // Fallback: the DB trigger swallows its own errors, so the category may be missing.
   const { data: created, error: createError } = await supabase
     .from("categories")
     .insert({ user_id: userId, name: TELEGRAM_CATEGORY_NAME, is_system: true })
@@ -54,8 +56,9 @@ export const saveWord = async (
   { userId, word, pos, details }: SaveInput,
 ): Promise<SaveResult> => {
   try {
+    const cleanWord = clamp(word, WORD_LIMITS.word);
     const translation = clamp(details.translation, WORD_LIMITS.translation);
-    if (!translation) return { status: "error" };
+    if (!cleanWord || !translation) return { status: "error" };
 
     const supabase = createServiceClient(env);
     const categoryId = await getTelegramCategoryId(supabase, userId);
@@ -63,7 +66,7 @@ export const saveWord = async (
     const { error } = await supabase.from("words").insert({
       user_id: userId,
       category_id: categoryId,
-      word: clamp(word, WORD_LIMITS.word),
+      word: cleanWord,
       translation,
       part_of_speech: pos as (typeof PARTS_OF_SPEECH)[number],
       source_language_id: LANGUAGES.sourceId,
@@ -78,6 +81,10 @@ export const saveWord = async (
     if (error) {
       if (error.message.includes("WORD_LIMIT_REACHED")) {
         return { status: "limit_reached" };
+      }
+      // 23505 = unique violation, enforced by the DB index
+      if (error.code === "23505") {
+        return { status: "duplicate" };
       }
       console.error("[save] insert failed:", error);
       return { status: "error" };

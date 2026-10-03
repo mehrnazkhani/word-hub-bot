@@ -44,12 +44,12 @@ export const runSaveStep = async ({
 
     await click.answerCallbackQuery();
 
-    const text =
-      result.status === "success"
-        ? saveMessages.success
-        : result.status === "limit_reached"
-          ? saveMessages.limitReached
-          : saveMessages.failed;
+    const text = {
+      success: saveMessages.success,
+      duplicate: saveMessages.duplicate,
+      limit_reached: saveMessages.limitReached,
+      error: saveMessages.failed,
+    }[result.status];
 
     // No reply_markup here, so the Save button is removed
     await click.editMessageText(`${cardHtml}\n\n${text}`, {
