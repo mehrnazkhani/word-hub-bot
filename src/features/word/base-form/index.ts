@@ -31,6 +31,7 @@ export async function runBaseFormStep({
 
   const keyboard = new InlineKeyboard()
     .text(baseFormMessages.use(base), "bf:base")
+    .row()
     .text(baseFormMessages.keep(word), "bf:keep");
 
   await ctx.reply(baseFormMessages.prompt(word, base, result.formDescription), {

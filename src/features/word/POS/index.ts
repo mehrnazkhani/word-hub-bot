@@ -40,7 +40,10 @@ export async function runPosStep({
   if (options.length === 1) return { ok: true, pos: options[0].pos };
 
   const keyboard = new InlineKeyboard();
-  options.forEach((p, i) => keyboard.text(p.pos, `ps:${i}`));
+  options.forEach((p, i) => {
+    if (i > 0) keyboard.row();
+    keyboard.text(p.pos, `ps:${i}`);
+  });
 
   const list = options
     .map((p, i) => `${i + 1}. ${p.pos} — ${p.meaning}`)

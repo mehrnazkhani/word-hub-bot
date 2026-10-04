@@ -26,7 +26,10 @@ export async function runSpellingStep({
   if (result.isCorrect || result.suggestions.length === 0) return word;
 
   const keyboard = new InlineKeyboard();
-  result.suggestions.forEach((s, i) => keyboard.text(s.word, `sp:${i}`));
+  result.suggestions.forEach((s, i) => {
+    if (i > 0) keyboard.row();
+    keyboard.text(s.word, `sp:${i}`);
+  });
   keyboard.row().text(spellingMessages.keep(word), "sp:keep");
 
   const list = result.suggestions
