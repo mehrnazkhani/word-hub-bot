@@ -48,6 +48,10 @@ export async function runBaseFormStep({
   await choice.answerCallbackQuery();
 
   const picked = choice.callbackQuery.data === "bf:base" ? base : word;
-  await choice.editMessageText(`✅ ${picked}`);
+  try {
+    await choice.deleteMessage();
+  } catch {
+    await choice.editMessageText(`✅ ${picked}`);
+  }
   return picked;
 }

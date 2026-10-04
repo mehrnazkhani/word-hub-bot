@@ -65,6 +65,10 @@ export async function runPosStep({
   const index = Number(choice.callbackQuery.data.replace("ps:", ""));
   const picked = options[index]?.pos ?? options[0].pos;
 
-  await choice.editMessageText(`✅ ${word} (${picked})`);
+  try {
+    await choice.deleteMessage();
+  } catch {
+    await choice.editMessageText(`✅ ${word} (${picked})`);
+  }
   return { ok: true, pos: picked };
 }

@@ -55,6 +55,10 @@ export async function runSpellingStep({
       ? word
       : (result.suggestions[Number(data.replace("sp:", ""))]?.word ?? word);
 
-  await choice.editMessageText(`✅ ${picked}`);
+  try {
+    await choice.deleteMessage();
+  } catch {
+    await choice.editMessageText(`✅ ${picked}`);
+  }
   return picked;
 }
