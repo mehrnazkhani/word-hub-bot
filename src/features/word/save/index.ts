@@ -16,12 +16,17 @@ export const runSaveStep = async ({
   details,
   userId,
   cardHtml,
+  pendingInline,
 }: SaveStepInput): Promise<void> => {
   const keyboard = new InlineKeyboard().text(
     saveMessages.saveButton,
     "sv:save",
   );
-  await ctx.reply(cardHtml, { parse_mode: "HTML", reply_markup: keyboard });
+  const card = await ctx.reply(cardHtml, {
+    parse_mode: "HTML",
+    reply_markup: keyboard,
+  });
+  pendingInline.push(card.message_id);
 
   try {
     for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {

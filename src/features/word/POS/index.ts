@@ -1,6 +1,7 @@
 import { InlineKeyboard } from "grammy";
 import { checkPos } from "../../ai/POS";
 import { wordMessages } from "../messages";
+import { untrackInlineMessage } from "../keyboards";
 import { posMessages } from "./message";
 import { PARTS_OF_SPEECH } from "../shared";
 import type { PosResult, StepInput } from "../types";
@@ -15,6 +16,7 @@ export async function runPosStep({
   ctx,
   env,
   word,
+  pendingInline,
 }: StepInput): Promise<PosResult> {
   await ctx.replyWithChatAction("typing");
 
@@ -49,9 +51,10 @@ export async function runPosStep({
     .map((p, i) => `${i + 1}. ${p.pos} — ${p.meaning}`)
     .join("\n");
 
-  await ctx.reply(`${posMessages.prompt(word)}\n\n${list}`, {
+  const sent = await ctx.reply(`${posMessages.prompt(word)}\n\n${list}`, {
     reply_markup: keyboard,
   });
+  pendingInline.push(sent.message_id);
 
   const choice = await conversation.waitFor("callback_query:data", {
     otherwise: async (c) => {
@@ -69,6 +72,8 @@ export async function runPosStep({
     await choice.deleteMessage();
   } catch {
     await choice.editMessageText(`✅ ${word} (${picked})`);
+  } finally {
+    untrackInlineMessage(pendingInline, sent.message_id);
   }
   return { ok: true, pos: picked };
 }

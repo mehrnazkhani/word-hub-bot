@@ -18,3 +18,9 @@ export const clearCancelReplayKeyboard = async (ctx: ConversationContext) => {
     console.error("[keyboard] failed to remove cancel keyboard:", err);
   }
 };
+
+/** Remove a message ID from the pending-inline tracker. */
+export const untrackInlineMessage = (pendingInline: number[], id: number) => {
+  const index = pendingInline.indexOf(id);
+  if (index >= 0) pendingInline.splice(index, 1);
+};

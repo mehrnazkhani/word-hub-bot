@@ -1,6 +1,7 @@
 import { InlineKeyboard } from "grammy";
 import { checkSpelling } from "../../ai/spelling";
 import { wordMessages } from "../messages";
+import { untrackInlineMessage } from "../keyboards";
 import { spellingMessages } from "./message";
 import type { StepInput, StepResult } from "../types";
 
@@ -9,6 +10,7 @@ export async function runSpellingStep({
   ctx,
   env,
   word,
+  pendingInline,
 }: StepInput): StepResult {
   await ctx.replyWithChatAction("typing");
 
@@ -36,9 +38,10 @@ export async function runSpellingStep({
     .map((s, i) => `${i + 1}. ${s.word} — ${s.explanation}`)
     .join("\n");
 
-  await ctx.reply(`${spellingMessages.prompt(word)}\n\n${list}`, {
+  const sent = await ctx.reply(`${spellingMessages.prompt(word)}\n\n${list}`, {
     reply_markup: keyboard,
   });
+  pendingInline.push(sent.message_id);
 
   const choice = await conversation.waitFor("callback_query:data", {
     otherwise: async (c) => {
@@ -59,6 +62,8 @@ export async function runSpellingStep({
     await choice.deleteMessage();
   } catch {
     await choice.editMessageText(`✅ ${picked}`);
+  } finally {
+    untrackInlineMessage(pendingInline, sent.message_id);
   }
   return picked;
 }

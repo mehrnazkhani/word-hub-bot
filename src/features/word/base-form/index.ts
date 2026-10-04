@@ -1,6 +1,7 @@
 import { InlineKeyboard } from "grammy";
 import { checkBaseForm } from "../../ai/base-form";
 import { wordMessages } from "../messages";
+import { untrackInlineMessage } from "../keyboards";
 import { baseFormMessages } from "./message";
 import type { StepInput, StepResult } from "../types";
 
@@ -9,6 +10,7 @@ export async function runBaseFormStep({
   ctx,
   env,
   word,
+  pendingInline,
 }: StepInput): StepResult {
   await ctx.replyWithChatAction("typing");
 
@@ -34,9 +36,10 @@ export async function runBaseFormStep({
     .row()
     .text(baseFormMessages.keep(word), "bf:keep");
 
-  await ctx.reply(baseFormMessages.prompt(word, base, result.formDescription), {
+  const sent = await ctx.reply(baseFormMessages.prompt(word, base, result.formDescription), {
     reply_markup: keyboard,
   });
+  pendingInline.push(sent.message_id);
 
   const choice = await conversation.waitFor("callback_query:data", {
     otherwise: async (c) => {
@@ -52,6 +55,8 @@ export async function runBaseFormStep({
     await choice.deleteMessage();
   } catch {
     await choice.editMessageText(`✅ ${picked}`);
+  } finally {
+    untrackInlineMessage(pendingInline, sent.message_id);
   }
   return picked;
 }

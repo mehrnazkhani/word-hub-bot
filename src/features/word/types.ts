@@ -7,6 +7,8 @@ export type StepInput = {
   ctx: ConversationContext;
   env: Env;
   word: string;
+  /** Message IDs with live inline buttons — deleted if the user cancels. */
+  pendingInline: number[];
 };
 
 export type StepResult = Promise<string | null>;

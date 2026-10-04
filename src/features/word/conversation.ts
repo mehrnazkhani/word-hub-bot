@@ -18,8 +18,22 @@ export const createWordConversation = (env: Env) => {
     word: string,
     userId: string,
   ) {
+    // Messages with live inline buttons (option prompts, save card).
+    // If the user cancels, these must disappear — dead buttons confuse.
+    const pendingInline: number[] = [];
+
     // Global cancel: stays active at every wait call below.
     conversation.waitForHears(wordMessages.cancelButton).then(async (c) => {
+      const chatId = c.chat?.id;
+      if (chatId !== undefined) {
+        for (const id of [...pendingInline]) {
+          try {
+            await c.api.deleteMessage(chatId, id);
+          } catch {
+            // Already gone (e.g. deleted after a choice) — ignore.
+          }
+        }
+      }
       await c.reply(wordMessages.cancelled, {
         reply_markup: removeCancelKeyboard,
       });
@@ -33,7 +47,7 @@ export const createWordConversation = (env: Env) => {
     const fail = () =>
       ctx.reply(wordMessages.aiError, { reply_markup: removeCancelKeyboard });
 
-    const base = { conversation, ctx, env };
+    const base = { conversation, ctx, env, pendingInline };
 
     const spelled = await runSpellingStep({ ...base, word });
     if (!spelled) return fail();
