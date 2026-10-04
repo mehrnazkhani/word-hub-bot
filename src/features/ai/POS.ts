@@ -17,6 +17,9 @@ Find all valid parts of speech from this list: ${PARTS_OF_SPEECH.join(", ")}.
 - If multiple: { isValid: false, availablePos: [{ pos: "noun", meaning: "..." }, ...] }
 - If none: { isValid: false, availablePos: [] }
 
+Use ONLY these exact lowercase values for "pos": ${PARTS_OF_SPEECH.join(", ")}.
+Greetings and exclamations such as "hello" or "wow" are "interjection". Never use any other label such as "exclamation", "phrase" or "greeting".
+
 Keep meanings short (max 8 words).
 `;
 

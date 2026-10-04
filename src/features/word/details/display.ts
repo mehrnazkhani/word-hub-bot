@@ -1,4 +1,4 @@
-import type { WordDetails } from "../details";
+import type { WordDetails } from "../../ai/details";
 import { splitRelatedWords, WORD_LIMITS } from "../shared";
 
 const POS_ABBREVIATION: Record<string, string> = {
@@ -24,13 +24,16 @@ export const displayWordCard = (word: string, details: WordDetails): string => {
   const antonyms = related(details.antonyms);
 
   const blocks = [
-    `📖 <b>${escapeHtml(word)}</b>${pos ? ` (${pos})` : ""}`,
-    details.translation && escapeHtml(details.translation),
-    details.description && escapeHtml(details.description),
-    details.example && `💬 <b>Example</b>\n${escapeHtml(details.example)}`,
-    synonyms && `🔗 <b>Synonyms</b>\n${escapeHtml(synonyms)}`,
-    antonyms && `↔️ <b>Antonyms</b>\n${escapeHtml(antonyms)}`,
+    `<code>${escapeHtml(word)}</code>${pos ? `  (<i>${pos}</i>)` : ""}`,
+    details.translation && `${escapeHtml(details.translation)}`,
+    details.description &&
+      `<blockquote>${escapeHtml(details.description)}</blockquote>`,
+    details.example && `<b>Example</b>\n${escapeHtml(details.example)}`,
+    synonyms && `<b>Synonyms</b>\n${escapeHtml(synonyms)}`,
+    antonyms && `<b>Antonyms</b>\n${escapeHtml(antonyms)}`,
   ];
+
+  return blocks.filter(Boolean).join("\n\n");
 
   return blocks.filter(Boolean).join("\n\n");
 };

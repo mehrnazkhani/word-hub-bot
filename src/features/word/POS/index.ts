@@ -5,6 +5,11 @@ import { posMessages } from "./message";
 import { PARTS_OF_SPEECH } from "../shared";
 import type { PosResult, StepInput } from "../types";
 
+const POS_ALIASES: Record<string, string> = {
+  exclamation: "interjection",
+  greeting: "interjection",
+};
+
 export async function runPosStep({
   conversation,
   ctx,
@@ -24,9 +29,12 @@ export async function runPosStep({
 
   if (!result) return { ok: false, reason: "error" };
 
-  const options = result.availablePos.filter((p) =>
-    (PARTS_OF_SPEECH as readonly string[]).includes(p.pos),
-  );
+  const options = result.availablePos
+    .map((p) => {
+      const pos = p.pos.trim().toLowerCase();
+      return { ...p, pos: POS_ALIASES[pos] ?? pos };
+    })
+    .filter((p) => (PARTS_OF_SPEECH as readonly string[]).includes(p.pos));
 
   if (options.length === 0) return { ok: false, reason: "none" };
   if (options.length === 1) return { ok: true, pos: options[0].pos };
