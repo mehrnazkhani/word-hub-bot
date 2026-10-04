@@ -11,5 +11,6 @@ export const TELEGRAM_CATEGORY_NAME = "Telegram Words";
 export const AI_MODEL = "";
 
 export const AI_MODELS = {
-  groq: "qwen/qwen3.8-27b",
+  // Final fallback when GROQ_MODEL and Gemini both fail
+  groqFallback: "qwen/qwen3-32b",
 } as const;
