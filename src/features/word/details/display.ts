@@ -34,6 +34,4 @@ export const displayWordCard = (word: string, details: WordDetails): string => {
   ];
 
   return blocks.filter(Boolean).join("\n\n");
-
-  return blocks.filter(Boolean).join("\n\n");
 };
