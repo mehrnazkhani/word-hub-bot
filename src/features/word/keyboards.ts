@@ -9,8 +9,12 @@ export const cancelKeyboard = new Keyboard()
 export const removeCancelKeyboard = { remove_keyboard: true as const };
 
 export const clearCancelReplayKeyboard = async (ctx: ConversationContext) => {
-  const sent = await ctx.reply("✅", {
-    reply_markup: removeCancelKeyboard,
-  });
-  await ctx.api.deleteMessage(sent.chat.id, sent.message_id);
+  try {
+    const sent = await ctx.reply("✅", {
+      reply_markup: removeCancelKeyboard,
+    });
+    await ctx.api.deleteMessage(sent.chat.id, sent.message_id);
+  } catch (err) {
+    console.error("[keyboard] failed to remove cancel keyboard:", err);
+  }
 };

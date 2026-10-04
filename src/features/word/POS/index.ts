@@ -51,7 +51,11 @@ export async function runPosStep({
   });
 
   const choice = await conversation.waitFor("callback_query:data", {
-    otherwise: (c) => c.reply(wordMessages.useButtons),
+    otherwise: async (c) => {
+      // Let the global Cancel handler deal with it — don't nag.
+      if (c.msg?.text === wordMessages.cancelButton) return;
+      await c.reply(wordMessages.useButtons);
+    },
   });
   await choice.answerCallbackQuery();
 
