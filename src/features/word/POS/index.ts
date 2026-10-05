@@ -48,7 +48,7 @@ export async function runPosStep({
   });
 
   const list = options
-    .map((p, i) => `${i + 1}. ${p.pos} — ${p.meaning}`)
+    .map((p, i) => `${i + 1}. ${p.pos}: ${p.meaning}`)
     .join("\n");
 
   const sent = await ctx.reply(`${posMessages.prompt(word)}\n\n${list}`, {

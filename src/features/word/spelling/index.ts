@@ -35,7 +35,7 @@ export async function runSpellingStep({
   keyboard.row().text(spellingMessages.keep(word), "sp:keep");
 
   const list = result.suggestions
-    .map((s, i) => `${i + 1}. ${s.word} — ${s.explanation}`)
+    .map((s, i) => `${i + 1}. ${s.word}: ${s.explanation}`)
     .join("\n");
 
   const sent = await ctx.reply(`${spellingMessages.prompt(word)}\n\n${list}`, {
