@@ -3,7 +3,7 @@ import { checkPos } from "../../ai/POS";
 import { wordMessages } from "../messages";
 import { untrackInlineMessage } from "../keyboards";
 import { posMessages } from "./message";
-import { PARTS_OF_SPEECH } from "../shared";
+import { PARTS_OF_SPEECH, escapeHtml } from "../shared";
 import type { PosResult, StepInput } from "../types";
 
 const POS_ALIASES: Record<string, string> = {
@@ -48,10 +48,14 @@ export async function runPosStep({
   });
 
   const list = options
-    .map((p, i) => `${i + 1}. ${p.pos}: ${p.meaning}`)
+    .map(
+      (p, i) =>
+        `<b>${i + 1}. ${escapeHtml(p.pos)}</b> - ${escapeHtml(p.meaning)}`,
+    )
     .join("\n");
 
   const sent = await ctx.reply(`${posMessages.prompt(word)}\n\n${list}`, {
+    parse_mode: "HTML",
     reply_markup: keyboard,
   });
   pendingInline.push(sent.message_id);

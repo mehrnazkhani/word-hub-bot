@@ -23,3 +23,6 @@ export const splitRelatedWords = (value: string): string[] =>
     .split(",")
     .map((w) => w.trim())
     .filter(Boolean);
+
+export const escapeHtml = (s: string) =>
+  s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");

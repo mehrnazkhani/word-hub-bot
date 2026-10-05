@@ -1,5 +1,5 @@
 import type { WordDetails } from "../../ai/details";
-import { splitRelatedWords, WORD_LIMITS } from "../shared";
+import { escapeHtml, splitRelatedWords, WORD_LIMITS } from "../shared";
 
 const POS_ABBREVIATION: Record<string, string> = {
   noun: "n.",
@@ -11,9 +11,6 @@ const POS_ABBREVIATION: Record<string, string> = {
   conjunction: "conj.",
   interjection: "interj.",
 };
-
-const escapeHtml = (s: string) =>
-  s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
 const related = (value: string) =>
   splitRelatedWords(value).slice(0, WORD_LIMITS.maxRelatedWords).join(", ");

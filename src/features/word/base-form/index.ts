@@ -37,6 +37,7 @@ export async function runBaseFormStep({
     .text(baseFormMessages.keep(word), "bf:keep");
 
   const sent = await ctx.reply(baseFormMessages.prompt(word, base, result.formDescription), {
+    parse_mode: "HTML",
     reply_markup: keyboard,
   });
   pendingInline.push(sent.message_id);

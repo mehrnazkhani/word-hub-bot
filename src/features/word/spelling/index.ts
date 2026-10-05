@@ -2,6 +2,7 @@ import { InlineKeyboard } from "grammy";
 import { checkSpelling } from "../../ai/spelling";
 import { wordMessages } from "../messages";
 import { untrackInlineMessage } from "../keyboards";
+import { escapeHtml } from "../shared";
 import { spellingMessages } from "./message";
 import type { StepInput, StepResult } from "../types";
 
@@ -35,10 +36,14 @@ export async function runSpellingStep({
   keyboard.row().text(spellingMessages.keep(word), "sp:keep");
 
   const list = result.suggestions
-    .map((s, i) => `${i + 1}. ${s.word}: ${s.explanation}`)
+    .map(
+      (s, i) =>
+        `<b>${i + 1}. ${escapeHtml(s.word)}</b> - ${escapeHtml(s.explanation)}`,
+    )
     .join("\n");
 
   const sent = await ctx.reply(`${spellingMessages.prompt(word)}\n\n${list}`, {
+    parse_mode: "HTML",
     reply_markup: keyboard,
   });
   pendingInline.push(sent.message_id);
