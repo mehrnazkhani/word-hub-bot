@@ -18,9 +18,11 @@ export const createWordConversation = (env: Env) => {
     word: string,
     userId: string,
   ) {
-    // Messages with live inline buttons (option prompts, save card).
+    // Messages with live inline buttons (option prompts).
     // If the user cancels, these must disappear — dead buttons confuse.
     const pendingInline: number[] = [];
+    // Word card messages to keep on cancel — only their buttons are stripped.
+    const keepInline: number[] = [];
 
     // Global cancel: stays active at every wait call below.
     conversation.waitForHears(wordMessages.cancelButton).then(async (c) => {
@@ -31,6 +33,13 @@ export const createWordConversation = (env: Env) => {
             await c.api.deleteMessage(chatId, id);
           } catch {
             // Already gone (e.g. deleted after a choice) — ignore.
+          }
+        }
+        for (const id of [...keepInline]) {
+          try {
+            await c.api.editMessageReplyMarkup(chatId, id);
+          } catch {
+            // Already edited or gone — ignore.
           }
         }
       }
@@ -83,6 +92,7 @@ export const createWordConversation = (env: Env) => {
       userId,
       details: finalDetails,
       cardHtml: displayWordCard(finalWord, finalDetails),
+      keepInline,
     });
   };
 };

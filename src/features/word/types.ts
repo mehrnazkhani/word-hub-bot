@@ -23,4 +23,6 @@ export type SaveStepInput = DetailsInput & {
   userId: string;
   details: WordDetails;
   cardHtml: string;
+  /** Message IDs to keep on cancel (buttons stripped) — e.g. the word card. */
+  keepInline: number[];
 };

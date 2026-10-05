@@ -16,7 +16,7 @@ export const runSaveStep = async ({
   details,
   userId,
   cardHtml,
-  pendingInline,
+  keepInline,
 }: SaveStepInput): Promise<void> => {
   const keyboard = new InlineKeyboard().text(
     saveMessages.saveButton,
@@ -26,7 +26,8 @@ export const runSaveStep = async ({
     parse_mode: "HTML",
     reply_markup: keyboard,
   });
-  pendingInline.push(card.message_id);
+  // Keep the word card visible if the user cancels — only strip its button.
+  keepInline.push(card.message_id);
 
   try {
     for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
