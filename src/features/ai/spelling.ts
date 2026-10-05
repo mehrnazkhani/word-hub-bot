@@ -2,79 +2,75 @@ import { z } from "zod";
 import { LANGUAGES } from "../../config";
 import type { Env } from "../../types";
 import { generateStructured } from "./generate";
+import { buildWordPrompt, normalizeWord, uniqueBy } from "./prompt-utils";
+
+const MAX_SUGGESTIONS = 3;
 
 const schema = z.object({
-  isCorrect: z.boolean(),
+  isCorrect: z
+    .boolean()
+    .describe("true only if the word is a valid, correctly spelled word"),
   suggestions: z
-    .array(z.object({ word: z.string(), explanation: z.string() }))
-    .max(3),
+    .array(
+      z.object({
+        word: z.string().describe("a real word, spelled correctly"),
+        explanation: z
+          .string()
+          .describe("simple definition, max 8 words, not a translation"),
+      }),
+    )
+    .max(MAX_SUGGESTIONS)
+    .describe("empty if isCorrect is true or no close word exists"),
 });
 
-const buildPrompt = (word: string) => `
-You are a strict spelling correction engine.
+type SpellingResult = z.infer<typeof schema>;
 
-Your ONLY task is spelling correction.
+const RULES = `
+You are a spelling checker for ${LANGUAGES.source}.
 
-Input word:
-"${word}"
+Decide whether the text inside <word> is a correctly spelled ${LANGUAGES.source} word.
 
-Language:
-${LANGUAGES.source}
+Correct spelling:
+- Accept standard dictionary spellings, accepted regional variants (e.g. color/colour), and well-known proper nouns.
+- If correct: isCorrect = true, suggestions = [].
 
-Rules:
+Misspelled (or not a real word):
+- isCorrect = false.
+- Give up to ${MAX_SUGGESTIONS} real ${LANGUAGES.source} words, closest spelling first.
+- Judge closeness by letters only: missing, extra, wrong, or swapped adjacent letters. Ignore meaning; no synonyms or related words.
+- Each suggestion must differ from the others and from the input.
+- If no word is reasonably close, return an empty array. Do not guess.
 
-- If the word is spelled correctly, return:
-{
-  "isCorrect": true,
-  "suggestions": []
-}
-
-- If the word is misspelled:
-  - Return maximum 3 suggestions.
-  - Every suggestion MUST be a different word.
-  - Never return duplicate words.
-  - Suggestions must be ranked by spelling similarity.
-  - Only return the closest spelling corrections.
-  - Do not suggest synonyms.
-  - Do not suggest related words.
-  - Do not use word meaning to find suggestions.
-  - Prefer the smallest spelling changes:
-    - missing letters
-    - extra letters
-    - wrong letters
-    - swapped adjacent letters
-
-Important:
-- This is NOT a translation task.
-- This is NOT a vocabulary task.
-- Ignore meanings when selecting suggestions.
-- Only analyze the spelling pattern.
-
-For each suggestion, return:
-
-{
-  "word": "correct word",
-  "explanation": "short dictionary-style definition"
-}
-
-Explanation rules:
-- Explanation is NOT a translation.
-- Do NOT translate the word.
-- Explain what the word means in simple words.
-- Maximum 8 words.
-- Write explanation in ${LANGUAGES.explanation}.
-
-Before returning:
-- Check the suggestions array.
-- Remove duplicate words.
-- Make sure every "word" value is unique.
-
-Return ONLY valid JSON.
+Explanation for each suggestion:
+- Write in ${LANGUAGES.explanation}.
+- A plain definition in at most 8 words. Not a translation.
 `;
 
-export const checkSpelling = (env: Env, word: string) =>
-  generateStructured(env, {
+// Enforce what prompts can't guarantee
+const postProcess = (word: string, result: SpellingResult): SpellingResult => {
+  if (result.isCorrect) return { isCorrect: true, suggestions: [] };
+
+  const suggestions = uniqueBy(
+    result.suggestions.filter(
+      (s) => s.word.trim().toLowerCase() !== word.toLowerCase(),
+    ),
+    (s) => s.word,
+  ).slice(0, MAX_SUGGESTIONS);
+
+  return { isCorrect: false, suggestions };
+};
+
+export const checkSpelling = async (
+  env: Env,
+  rawWord: string,
+): Promise<SpellingResult> => {
+  const word = normalizeWord(rawWord);
+  if (!word) return { isCorrect: false, suggestions: [] };
+
+  const result = await generateStructured(env, {
     schema,
-    prompt: buildPrompt(word),
-    timeoutMs: 10_000,
+    prompt: buildWordPrompt(RULES, word),
   });
+
+  return postProcess(word, result);
+};

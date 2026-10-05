@@ -9,11 +9,12 @@ type Options<T extends z.ZodType> = {
   schema: T;
   prompt: string;
   timeoutMs?: number;
+  temperature?: number;
 };
 
 const run = async <T extends z.ZodType>(
   model: LanguageModel,
-  { schema, prompt, timeoutMs = 15_000 }: Options<T>,
+  { schema, prompt, timeoutMs = 10_000, temperature = 0 }: Options<T>,
   reasoningEffort?: "none" | "low",
 ): Promise<z.infer<T>> => {
   const result = await generateText({
@@ -23,6 +24,7 @@ const run = async <T extends z.ZodType>(
     ...(reasoningEffort && {
       providerOptions: { groq: { reasoningEffort } },
     }),
+    temperature: temperature,
     prompt: prompt.trim(),
   });
 

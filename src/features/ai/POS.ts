@@ -3,29 +3,63 @@ import { LANGUAGES } from "../../config";
 import type { Env } from "../../types";
 import { generateStructured } from "./generate";
 import { PARTS_OF_SPEECH } from "../word/shared";
+import { buildWordPrompt, normalizeWord, uniqueBy } from "./prompt-utils";
 
 const schema = z.object({
-  isValid: z.boolean(),
-  availablePos: z.array(z.object({ pos: z.string(), meaning: z.string() })),
+  availablePos: z
+    .array(
+      z.object({
+        pos: z.enum(PARTS_OF_SPEECH),
+        meaning: z
+          .string()
+          .describe("most common meaning in this part of speech, max 8 words"),
+      }),
+    )
+    .describe("empty if the word fits none of the allowed parts of speech"),
 });
 
-const buildPrompt = (word: string) => `
-Given the word "${word}" in ${LANGUAGES.source}:
+type PosResult = {
+  isValid: boolean;
+  availablePos: z.infer<typeof schema>["availablePos"];
+};
 
-Find all valid parts of speech from this list: ${PARTS_OF_SPEECH.join(", ")}.
-- If only one: { isValid: true, availablePos: [{ pos, meaning }] }
-- If multiple: { isValid: false, availablePos: [{ pos: "noun", meaning: "..." }, ...] }
-- If none: { isValid: false, availablePos: [] }
+const RULES = `
+You are a part-of-speech analyzer for ${LANGUAGES.source}.
 
-Use ONLY these exact lowercase values for "pos": ${PARTS_OF_SPEECH.join(", ")}.
-Greetings and exclamations such as "hello" or "wow" are "interjection". Never use any other label such as "exclamation", "phrase" or "greeting".
+The text inside <word> is a correctly spelled ${LANGUAGES.source} word. List every part of speech it is commonly used as.
 
-Keep meanings short (max 8 words).
+Rules:
+- Include only common, current usages. Skip rare, archaic, or highly technical ones.
+- At most one entry per part of speech, most common first.
+- Greetings and exclamations such as "hello" or "wow" are "interjection".
+- "meaning" is the word's meaning in that specific part of speech: a plain definition in ${LANGUAGES.explanation}, max 8 words.
+- If the word fits none of the allowed parts of speech, return an empty array.
 `;
 
-export const checkPos = (env: Env, word: string) =>
-  generateStructured(env, {
+// Enforce what prompts can't guarantee
+const postProcess = (result: z.infer<typeof schema>): PosResult => {
+  const availablePos = uniqueBy(
+    result.availablePos
+      .map((p) => ({ pos: p.pos, meaning: p.meaning.trim() }))
+      .filter((p) => p.meaning),
+    (p) => p.pos,
+  );
+
+  // Exactly one part of speech means no choice is needed
+  return { isValid: availablePos.length === 1, availablePos };
+};
+
+export const checkPos = async (
+  env: Env,
+  rawWord: string,
+): Promise<PosResult> => {
+  const word = normalizeWord(rawWord);
+  if (!word) return { isValid: false, availablePos: [] };
+
+  const result = await generateStructured(env, {
     schema,
-    prompt: buildPrompt(word),
-    timeoutMs: 10_000,
+    prompt: buildWordPrompt(RULES, word),
   });
+
+  return postProcess(result);
+};
